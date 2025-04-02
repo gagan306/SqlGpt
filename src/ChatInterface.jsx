@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import QuestionBox from './Chatbox.js';
+import QuestionBox from './Chatbox.jsx';
 
 function ChatInterface() {
   const [messages, setMessages] = useState([
@@ -19,44 +19,44 @@ function ChatInterface() {
   }, [messages]);
 
   return (
-    <div style={{ maxWidth: '90%', margin: 'auto', marginTop: '80px' }}>
+    <div style={{ 
+      width: '100%', 
+      maxWidth: '800px', 
+      margin: '0 auto', 
+      marginTop: '40px', 
+      height: 'calc(100vh - 150px)', 
+      display: 'flex', 
+      flexDirection: 'column'
+    }}>
       <div
         ref={chatRef}
         style={{ 
-          padding: '10px', 
-          height: '750px', 
-          overflowY: 'auto', 
-           
+          padding: '20px', 
+          flex: 1,
+          overflowY: 'auto',
           borderRadius: '10px',
-          position: 'relative', // Ensure positioning context
+          position: 'relative',
+          marginBottom: '20px'
         }}
       >
-        {/* Separate div for the blurred background */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backdropFilter: 'blur(1px)', // Apply blur only to this background layer
-            zIndex: 0, // Place it behind the content
-          }}
-        />
-        {/* Content layer above the blurred background */}
+        {/* Content layer */}
         <div style={{ position: 'relative', zIndex: 1 }}>
           {messages.map((msg, index) => (
-            <div key={index} style={{ textAlign: msg.sender === 'user' ? 'right' : 'left' }}>
+            <div key={index} style={{ 
+              textAlign: msg.sender === 'user' ? 'right' : 'left',
+              marginBottom: '10px'
+            }}>
               <p
                 style={{ 
-                  background: 'transparent',
-                  color: '#FFF', // Soft pale yellow
+                  background: msg.sender === 'user' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                  color: '#FFF',
                   display: 'inline-block',
-                  padding: '8px 12px',
-                  borderRadius: '10px',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
                   maxWidth: '70%',
                   margin: '5px 0',
-                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
+                  wordBreak: 'break-word',
+                  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
                 }}
               >
                 <strong>{msg.sender === 'user' ? 'You' : 'Bot'}:</strong> {msg.text}
@@ -66,7 +66,9 @@ function ChatInterface() {
         </div>
       </div>
       
-      <QuestionBox addMessage={addMessage} />
+      <div style={{ position: 'relative', width: '100%' }}>
+        <QuestionBox addMessage={addMessage} />
+      </div>
     </div>
   );
 }
