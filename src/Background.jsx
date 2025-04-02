@@ -1,33 +1,16 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 export function GridBackgroundDemo() {
-  useEffect(() => {
-    document.documentElement.style.backgroundColor = '#0f172a';
-    document.body.style.backgroundColor = '#0f172a';
-    
-    const rootElement = document.getElementById('root');
-    if (rootElement) {
-      rootElement.style.backgroundColor = '#0f172a';
-    }
-    
-    return () => {
-      document.documentElement.style.backgroundColor = '';
-      document.body.style.backgroundColor = '';
-    };
-  }, []);
-  
   return (
     <div style={{
-      position: 'fixed',
+      position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: '#0f172a',
+      backgroundColor: 'transparent',
       overflow: 'hidden',
-      zIndex: -1,
-      width: '100vw',
-      height: '100vh',
+      zIndex: 0
     }}>
       <div style={{
         position: 'absolute',
