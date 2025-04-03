@@ -2,6 +2,17 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 export const Sidebar = ({ onProfileClick, isOpen, toggleSidebar }) => {
+  // Debug function to verify onClick is working
+  const handleProfileClick = (e) => {
+    e.preventDefault();
+    console.log("Profile clicked in sidebar");
+    if (typeof onProfileClick === 'function') {
+      onProfileClick();
+    } else {
+      console.error("onProfileClick is not a function", onProfileClick);
+    }
+  };
+
   return (
     <div
       style={{
@@ -78,21 +89,26 @@ export const Sidebar = ({ onProfileClick, isOpen, toggleSidebar }) => {
           <span>History</span>
         </NavLink>
 
-        <NavLink 
-          to="/profile" 
+        {/* Changed from div to button for better semantics */}
+        <button 
+          onClick={handleProfileClick}
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
             padding: '12px 20px',
             color: 'white',
             textDecoration: 'none',
-            gap: '10px'
+            gap: '10px',
+            cursor: 'pointer',
+            background: 'transparent',
+            border: 'none',
+            width: '100%',
+            textAlign: 'left'
           }}
-          activeStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
         >
           <i className="fa fa-user"></i>
           <span>Profile</span>
-        </NavLink>
+        </button>
       </div>
       
       {/* Footer */}
