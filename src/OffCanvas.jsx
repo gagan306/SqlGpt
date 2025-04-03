@@ -78,23 +78,23 @@ export const Sidebar = ({ onProfileClick, isOpen, toggleSidebar }) => {
           <span>History</span>
         </NavLink>
 
-        <div 
-          onClick={onProfileClick}
+        <NavLink 
+          to="/profile" 
           style={{ 
             display: 'flex', 
             alignItems: 'center', 
             padding: '12px 20px',
             color: 'white',
             textDecoration: 'none',
-            gap: '10px',
-            cursor: 'pointer'
+            gap: '10px'
           }}
+          activeStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
         >
           <i className="fa fa-user"></i>
-          <span>Account</span>
-        </div>
+          <span>Profile</span>
+        </NavLink>
       </div>
-
+      
       {/* Footer */}
       <div style={{ 
         padding: '20px 5px', 

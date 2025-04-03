@@ -4,9 +4,9 @@ import { useDisclosure } from "@heroui/react";
 import './App.css';
 import { Sidebar } from './OffCanvas.jsx';
 import GridBackgroundDemo from './Background.jsx';
-import RegistrationBox from './UserAccount.jsx';
-import ChatInterface from './ChatInterface.jsx';
 
+import ChatInterface from './ChatInterface.jsx';
+import SignupFormDemo from './UserAccount.tsx';
 const HistoryComponent = () => <div style={{ color: 'white' }}>History Content Here</div>;
 
 // Simple hamburger button component
@@ -30,14 +30,14 @@ function App() {
 
   return (
     <Router>
-      {/* Background is now outside the container to cover entire screen */}
+      
       <GridBackgroundDemo />
       
-      {/* Show hamburger menu only when sidebar is collapsed */}
+      
       {!isSidebarOpen && <HamburgerButton onClick={toggleSidebar} />}
       
       <div className={`app-container ${isSidebarOpen ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
-        {/* Pass all required props to Sidebar */}
+        
         <Sidebar 
           onProfileClick={onOpen} 
           isOpen={isSidebarOpen} 
@@ -48,7 +48,7 @@ function App() {
           <Routes>
             <Route path="/Chat" element={<ChatInterface />} />
             <Route path="/History" element={<HistoryComponent />} />
-            {/* Remove profile route since it's now a modal */}
+            <Route path="/Profile" element={<SignupFormDemo />} />
           </Routes>
         </div>
       </div>
