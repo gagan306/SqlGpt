@@ -6,7 +6,7 @@ import { Sidebar } from './OffCanvas.jsx';
 import GridBackgroundDemo from './Background.jsx';
 import LoginModal from './LoginModal.jsx';
 import ChatInterface from './ChatInterface.jsx';
-
+import BodyOnlyExample from './ChatHistory.jsx'
 
 const HistoryComponent = () => <div style={{ color: 'white' }}>History Content Here</div>;
 
@@ -53,7 +53,7 @@ function App() {
           
           <Routes>
             <Route path="/Chat" element={<ChatInterface />} />
-            <Route path="/History" element={<HistoryComponent />} />
+            <Route path="/History" element={<BodyOnlyExample />} />
           </Routes>
         </div>
       </div>
