@@ -88,18 +88,45 @@ export default function LoginModal({ isOpen, onOpenChange }) {
   const [statusMessage, setStatusMessage] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [Rno , setRegistrationNO] = useState("");
-  
+  const [loggedInUser, setLoggedInUser] = useState(null);
 
-  const handleLogin =  async () => {
-    try{
-      const response = await SendLoginDetails(email,password);
-       
+
+  const handleLogin = async () => {
+    try {
+      const response = await SendLoginDetails(email, password);
+  
       setStatusMessage(response.message);
-    }catch (err) {
+      localStorage.setItem("user", JSON.stringify(response));
+  
+      setLoggedInUser({
+        name: response.name,
+        email: response.email,
+        employeeId: response.employeeId
+      });
+  
+    } catch (err) {
       setStatusMessage("Login error!");
     }
-   
   };
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      setLoggedInUser(JSON.parse(user));
+    }
+  }, []);
+  
+
+  const handleLogout = () => {
+    setLoggedInUser(null);
+    setEmail("");
+    setPassword("");
+    setRememberMe(false);
+    setStatusMessage("Logged out successfully.");
+    setMode("login");
+    localStorage.removeItem("user");
+
+  };
+  
 
   const handleSignup = async () => {
     try {
@@ -116,6 +143,7 @@ export default function LoginModal({ isOpen, onOpenChange }) {
         setStatusMessage("Signup error, please try again!");
       }
     }
+    setStatusMessage("");
   };
   
   
@@ -242,6 +270,33 @@ export default function LoginModal({ isOpen, onOpenChange }) {
 
   // This alternative rendering ensures the modal is shown regardless of heroui's modal
   if (isOpen) {
+    if (loggedInUser) {
+      return (
+        <div style={modalStyle}>
+          <div style={{ ...modalContentStyle, position: "relative" }}>
+            <button
+              onClick={() => handleOpenChange(false)}
+              style={closeButtonStyle}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 style={{ marginBottom: "16px", fontSize: "24px" }}>
+              Welcome, {loggedInUser.name}
+            </h2>
+            <p style={{ fontSize: "16px", marginBottom: "24px", color: "#aaa" }}>
+              Email: {loggedInUser.email}
+            </p>
+            <div style={footerStyle}>
+              <button onClick={handleLogout} style={primaryButtonStyle}>
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div style={modalStyle}>
         <div style={{...modalContentStyle, position: 'relative'}}>
@@ -253,6 +308,11 @@ export default function LoginModal({ isOpen, onOpenChange }) {
             ×
           </button>
           
+        
+
+
+
+
           {mode === "login" && (
             <>
               <h2 style={{ marginBottom: '24px', fontSize: '24px' }}>Log in</h2>

@@ -7,5 +7,6 @@ export const SendLoginDetails = async (Email, Password) => {
       Email : Email,
       PasswordHash: Password,
     }).then(res => res.data);
+   
   };
   
