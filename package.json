@@ -13,6 +13,7 @@
     "@heroui/react": "^2.7.5",
     "@radix-ui/react-label": "^2.1.2",
     "@tabler/icons-react": "^3.31.0",
+    "axios": "^1.8.4",
     "cdbreact": "^1.5.19",
     "clsx": "^2.1.1",
     "esbuild": "^0.25.2",

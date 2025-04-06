@@ -11,7 +11,8 @@ import {
   Input,
   Link,
 } from "@heroui/react";
-
+import {SendLoginDetails} from './api/login.js'
+import {SendSignupDetails} from './api/SignUp.js'
 export const MailIcon = (props) => {
   return (
     <svg
@@ -86,23 +87,39 @@ export default function LoginModal({ isOpen, onOpenChange }) {
   const [password, setPassword] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [Rno , setRegistrationNO] = useState("");
   
-  // Debug log to verify the modal is receiving the correct isOpen prop
-  useEffect(() => {
-    console.log("LoginModal - isOpen:", isOpen);
-  }, [isOpen]);
 
-  const handleLogin = () => {
-    // Add your login logic here
-    console.log("Login with:", email, password);
-    setStatusMessage("Login successful!");
+  const handleLogin =  async () => {
+    try{
+      const response = await SendLoginDetails(email,password);
+       
+      setStatusMessage(response.message);
+    }catch (err) {
+      setStatusMessage("Login error!");
+    }
+   
   };
 
-  const handleSignup = () => {
-    // Add your signup logic here
-    console.log("Signup with:", email, password);
-    setStatusMessage("Registration successful!");
+  const handleSignup = async () => {
+    try {
+      const response = await SendSignupDetails(email, password, Rno);
+      if (response.status === 200) {
+        setStatusMessage(response.data); // response.data contains the message
+      } else {
+        setStatusMessage("no response");
+      }
+    } catch (err) {
+      if (err.response && err.response.data) {
+        setStatusMessage(err.response.data); 
+      } else {
+        setStatusMessage("Signup error, please try again!");
+      }
+    }
   };
+  
+  
+  
 
   const handleNextStep = () => {
     if (email.trim() === "") {
@@ -295,7 +312,11 @@ export default function LoginModal({ isOpen, onOpenChange }) {
                   Sign in
                 </button>
               </div>
-              
+              {statusMessage && (
+                <div style={{ color: '#22c55e', marginBottom: '16px', fontSize: '14px' }}>
+                  {statusMessage}
+                </div>
+              )}
               {/* Sign up option below the login section */}
               <div style={{ marginTop: '16px', textAlign: 'center' }}>
                 <p style={{ color: '#aaa', fontSize: '14px' }}>
@@ -349,6 +370,7 @@ export default function LoginModal({ isOpen, onOpenChange }) {
                 >
                   Next
                 </button>
+                
               </div>
             </>
           )}
@@ -368,6 +390,16 @@ export default function LoginModal({ isOpen, onOpenChange }) {
                   placeholder="Create your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+              <div style={inputContainerStyle}>
+                <label style={inputLabelStyle}>Registration Number</label>
+                <input 
+                  type="text"
+                  placeholder="Enter your Registration Number"
+                  value={Rno}
+                  onChange={(e) => setRegistrationNO(e.target.value)}
                   style={inputStyle}
                 />
               </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { sendChatQuestion } from "./api/ChatHistory.js";
 
 export function QuestionBox({ addMessage }) {
   const [text, setText] = useState("");
@@ -17,21 +18,11 @@ export function QuestionBox({ addMessage }) {
     addMessage(text, "user"); // Show user message immediately
 
     try {
-      let res = await fetch("https://localhost:7053/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-
-      let resJson = await res.json();
-      addMessage(resJson.message, "bot"); // Show bot response
-
-      setText(""); // Clear input after sending
+      const response = await sendChatQuestion(text); // Centralized call
+      addMessage(response.message, "bot"); // Assuming response has `message`
+      setText("");
       resizeTextarea();
     } catch (err) {
-      console.error("Error:", err);
       addMessage("Failed to send the question. Please try again.", "bot");
     }
   };
