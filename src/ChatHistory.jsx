@@ -6,7 +6,7 @@ function BodyOnlyExample() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://run.mocky.io/')
+    fetch('https://run.mocky.io/v3/83c5bab4-7d19-46cb-b990-d61391e61656')
       .then((response) => response.json())
       .then((data) => {
         setChats(Array.isArray(data) ? data : []);
