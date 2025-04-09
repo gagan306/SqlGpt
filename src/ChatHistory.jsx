@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import Card from 'react-bootstrap/Card';
+import { fetchChats } from './api/ChatHistory.js'; // <- imported here
 
 function BodyOnlyExample() {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://run.mocky.io/v3/f948c20c-fd50-4059-a422-6432551d391d')
-      .then((response) => response.json())
-      .then((data) => {
-        setChats(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching chats:', error);
-        setLoading(false);
-      });
+    const getChats = async () => {
+      const data = await fetchChats();
+      setChats(data);
+      setLoading(false);
+    };
+
+    getChats();
   }, []);
 
   const groupChatsByDate = (chats) => {
@@ -60,7 +58,7 @@ function BodyOnlyExample() {
               <Card
                 key={index}
                 style={{
-                  minWidth: '18rem',  // Minimum width instead of fixed width
+                  minWidth: '18rem',
                   height: '6rem',
                   border: '2px solid gray',
                   borderRadius: '9px',
@@ -87,7 +85,7 @@ function BodyOnlyExample() {
               <Card
                 key={index}
                 style={{
-                  minWidth: '18rem',  // Minimum width instead of fixed width
+                  minWidth: '18rem',
                   height: '6rem',
                   border: '2px solid gray',
                   borderRadius: '9px',
@@ -96,7 +94,7 @@ function BodyOnlyExample() {
                 }}
               >
                 <Card.Body>
-                  <Card.Title>{chat.title}</Card.Title>  
+                  <Card.Title>{chat.title}</Card.Title>
                   <Card.Text>{chat.content}</Card.Text>
                   <Card.Link href="#">Open Chat</Card.Link>
                 </Card.Body>
@@ -114,7 +112,7 @@ function BodyOnlyExample() {
               <Card
                 key={index}
                 style={{
-                  minWidth: '18rem',  // Minimum width instead of fixed width
+                  minWidth: '18rem',
                   height: '6rem',
                   border: '2px solid gray',
                   borderRadius: '9px',

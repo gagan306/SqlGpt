@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { sendChatQuestion } from "./api/ChatHistory.js";
+import { sendChatQuestion } from "./api/SendQuestion.js";
 
 export function QuestionBox({ addMessage }) {
   const [text, setText] = useState("");

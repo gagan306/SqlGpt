@@ -1,15 +1,13 @@
-import axios from 'axios';
 
-const API_BASE_URL = 'https://run.mocky.io/v3/83c5bab4-7d19-46cb-b990-d61391e61656';
 
-export const sendChatQuestion = async (questionText) => {
+// chatService.js
+export const fetchChats = async () => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/chat`, {
-      question: questionText,
-    });
-    return response.data; 
+    const response = await fetch('https://run.mocky.io/v3/f948c20c-fd50-4059-a422-6432551d391d');
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error('API error:', error);
-    throw error;
+    console.error('Error fetching chats:', error);
+    return [];
   }
 };
