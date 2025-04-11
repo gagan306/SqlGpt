@@ -1,7 +1,7 @@
 // src/components/Chat.jsx
 
 import React, { useEffect, useState } from 'react';
-import { fetchMessages } from '../api/api';
+import { fetchMessages } from './api/RenderChat';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
