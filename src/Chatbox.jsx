@@ -15,11 +15,11 @@ export function QuestionBox({ addMessage }) {
   const sendMessage = async () => {
     if (!text.trim()) return;
 
-    addMessage(text, "user"); // Show user message immediately
+    addMessage(text, "user"); 
 
     try {
-      const response = await sendChatQuestion(text); // Centralized call
-      addMessage(response.message, "bot"); // Assuming response has `message`
+      const response = await sendChatQuestion(text); 
+      addMessage(response.message, "bot"); 
       setText("");
       resizeTextarea();
     } catch (err) {
@@ -33,9 +33,9 @@ export function QuestionBox({ addMessage }) {
   };
 
   const handleKeyDown = (e) => {
-    // If Enter is pressed without Shift key, send the message
+    
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault(); // Prevent default behavior (new line)
+      e.preventDefault(); 
       sendMessage();
     }
   };
