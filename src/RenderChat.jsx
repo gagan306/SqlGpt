@@ -1,4 +1,4 @@
-// src/components/Chat.jsx
+
 
 import React, { useEffect, useState } from 'react';
 import { fetchMessages } from './api/RenderChat';
