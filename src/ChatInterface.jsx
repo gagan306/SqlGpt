@@ -8,11 +8,6 @@ function ChatInterface() {
 
   const chatRef = useRef(null);
 
-  // Helper functions for message parsing
-  const isCodeBlock = (text) => {
-    return text.includes('```');
-  };
-
   const isImageUrl = (url) => {
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
     const lowerUrl = url.toLowerCase();
@@ -20,7 +15,6 @@ function ChatInterface() {
   };
 
   const addMessage = (text, sender) => {
-    // Store the raw text in the message object
     setMessages((prevMessages) => [...prevMessages, { text, sender }]);
   };
 
@@ -30,66 +24,50 @@ function ChatInterface() {
     }
   }, [messages]);
 
-  const renderMessageContent = (text) => {
-    if (!text) return null;
-  
+  const renderCodeBlock = (text) => {
     const parts = [];
-    let remainingText = text;
-    let startIndex = remainingText.indexOf('```');
-  
-    while (startIndex !== -1) {
-      if (startIndex > 0) {
-        const beforeText = remainingText.substring(0, startIndex);
-        parts.push(<span key={`pre-${startIndex}`}>{processText(beforeText)}</span>);
+    let lastIndex = 0;
+    const codeBlockRegex = /```([\w]*)\n([\s\S]*?)```/g;
+    let match;
+
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(<span key={`text-${lastIndex}`}>{processText(text.substring(lastIndex, match.index))}</span>);
       }
-  
-      const endIndex = remainingText.indexOf('```', startIndex + 3);
-      if (endIndex === -1) {
-        // Unclosed code block, treat the rest as normal text
-        parts.push(<span key="unclosed">{processText(remainingText)}</span>);
-        return <div>{parts}</div>;
-      }
-  
-      const codeBlock = remainingText.substring(startIndex + 3, endIndex);
-      const firstLineBreak = codeBlock.indexOf('\n');
-      const language = firstLineBreak !== -1 ? codeBlock.substring(0, firstLineBreak).trim() : '';
-      const code = firstLineBreak !== -1 ? codeBlock.substring(firstLineBreak + 1) : codeBlock;
-  
+
+      const language = match[1] || 'plaintext';
+      const code = match[2];
+
       parts.push(
-        <div key={`code-${startIndex}`} style={{
+        <div key={`code-${match.index}`} style={{
           background: '#2d2d2d',
           color: '#f8f8f2',
           padding: '12px',
           borderRadius: '5px',
           margin: '8px 0',
           overflowX: 'auto',
-          textAlign: 'left',
+          textAlign: 'left'
         }}>
           {language && (
-            <div style={{ color: '#a6a6a6', fontSize: '0.8rem', marginBottom: '4px' }}>
-              {language}
-            </div>
+            <div style={{ color: '#a6a6a6', fontSize: '0.8rem', marginBottom: '4px' }}>{language}</div>
           )}
           <pre style={{ margin: 0 }}><code>{code}</code></pre>
         </div>
       );
-  
-      remainingText = remainingText.substring(endIndex + 3);
-      startIndex = remainingText.indexOf('```');
+
+      lastIndex = match.index + match[0].length;
     }
-  
-    if (remainingText) {
-      parts.push(<span key="post">{processText(remainingText)}</span>);
+
+    if (lastIndex < text.length) {
+      parts.push(<span key={`text-${lastIndex}`}>{processText(text.substring(lastIndex))}</span>);
     }
-  
-    return <div>{parts}</div>;
+
+    return <>{parts}</>;
   };
-  
+
   const processText = (text) => {
     if (!text) return null;
-  
     const lines = text.split('\n');
-  
     return (
       <div style={{ textAlign: 'left' }}>
         {lines.map((line, i) => {
@@ -102,7 +80,7 @@ function ChatInterface() {
               </div>
             );
           }
-  
+
           const numberMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
           if (numberMatch) {
             const listNumber = numberMatch[2];
@@ -113,7 +91,7 @@ function ChatInterface() {
               </div>
             );
           }
-  
+
           return line ? (
             <div key={i} style={{ marginBottom: '4px' }}>
               {processUrls(line)}
@@ -125,100 +103,62 @@ function ChatInterface() {
       </div>
     );
   };
-  
-  // Process URLs within text
+
   const processUrls = (text) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = [];
     let match;
     let lastIndex = 0;
-    let tempText = text;
-    
-    // Reset lastIndex of regex
+
     urlRegex.lastIndex = 0;
-    
+
     while ((match = urlRegex.exec(text)) !== null) {
       const url = match[0];
       const startIndex = match.index;
-      
-      // Add text before URL
+
       if (startIndex > lastIndex) {
         parts.push(text.substring(lastIndex, startIndex));
       }
-      
-      // Add URL as link or image
+
       if (isImageUrl(url)) {
         parts.push(
-          <img 
-            key={startIndex} 
-            src={url} 
-            alt="image" 
-            style={{ maxWidth: '200px', maxHeight: '150px', margin: '5px 0' }} 
-          />
+          <img key={startIndex} src={url} alt="image" style={{ maxWidth: '200px', maxHeight: '150px', margin: '5px 0' }} />
         );
       } else {
         parts.push(
-          <a 
-            key={startIndex} 
-            href={url} 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <a
+            key={startIndex}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ color: '#3b82f6', textDecoration: 'underline' }}
           >
             {url}
           </a>
         );
       }
-      
+
       lastIndex = startIndex + url.length;
     }
-    
-    // Add remaining text
+
     if (lastIndex < text.length) {
       parts.push(text.substring(lastIndex));
     }
-    
-    // If we found any URLs, return the processed parts
-    if (parts.length > 0) {
-      return parts.map((part, i) => 
-        typeof part === 'string' ? <span key={i}>{part}</span> : part
-      );
-    }
-    
-    // Otherwise return original text
-    return text;
+
+    return parts.map((part, i) => typeof part === 'string' ? <span key={i}>{part}</span> : part);
   };
-  
+
   return (
-    <div style={{ 
-      width: '100%', 
-      maxWidth: '800px', 
-      margin: '0 auto', 
-      marginTop: '40px', 
-      height: 'calc(100vh - 150px)', 
-      display: 'flex', 
-      flexDirection: 'column'
-    }}>
+    <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', marginTop: '40px', height: 'calc(100vh - 150px)', display: 'flex', flexDirection: 'column' }}>
       <div
         ref={chatRef}
-        style={{ 
-          padding: '20px', 
-          flex: 1,
-          overflowY: 'auto',
-          borderRadius: '10px',
-          position: 'relative',
-          marginBottom: '20px'
-        }}
+        style={{ padding: '20px', flex: 1, overflowY: 'auto', borderRadius: '10px', position: 'relative', marginBottom: '20px' }}
       >
-        {/* Content layer */}
         <div style={{ position: 'relative', zIndex: 1 }}>
           {messages.map((msg, index) => (
-            <div key={index} style={{ 
-              textAlign: msg.sender === 'user' ? 'right' : 'left',
-              marginBottom: '10px'
-            }}>
+            <div key={index} style={{ textAlign: msg.sender === 'user' ? 'right' : 'left', marginBottom: '10px' }}>
               <div
-                style={{ 
+                style={{
                   background: msg.sender === 'user' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.1)',
                   color: '#FFF',
                   display: 'inline-block',
@@ -232,13 +172,13 @@ function ChatInterface() {
                 }}
               >
                 <strong>{msg.sender === 'user' ? 'You' : 'Bot'}:</strong>{' '}
-                {renderMessageContent(msg.text)}
+                {renderCodeBlock(msg.text)}
               </div>
             </div>
           ))}
         </div>
       </div>
-      
+
       <div style={{ position: 'relative', width: '100%' }}>
         <QuestionBox addMessage={addMessage} />
       </div>
