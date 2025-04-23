@@ -19,11 +19,6 @@ function ChatInterface() {
     return imageExtensions.some(ext => lowerUrl.endsWith(ext));
   };
 
-  const containsList = (text) => {
-    const lines = text.split('\n');
-    return lines.some(line => /^(\s*)[-*]|\d+\.\s+/.test(line));
-  };
-
   const addMessage = (text, sender) => {
     // Store the raw text in the message object
     setMessages((prevMessages) => [...prevMessages, { text, sender }]);
@@ -35,254 +30,182 @@ function ChatInterface() {
     }
   }, [messages]);
 
-  // Function to render code blocks
-  const renderCodeBlock = (text) => {
-    const parts = [];
-    let currentText = text;
+  // Function to parse and render the message content
+  const renderMessageContent = (text) => {
+    if (!text) return null;
     
-    // Find all code blocks
-    const codeBlockRegex = /```([\w]*)\n([\s\S]*?)```/g;
-    let match;
-    let lastIndex = 0;
-    
-    while ((match = codeBlockRegex.exec(text)) !== null) {
-      // Add text before code block
-      if (match.index > lastIndex) {
+    // First handle code blocks
+    if (text.includes('```')) {
+      const parts = [];
+      let remainingText = text;
+      let startIndex = remainingText.indexOf('```');
+      
+      while (startIndex !== -1) {
+        // Add text before the code block
+        if (startIndex > 0) {
+          const beforeText = remainingText.substring(0, startIndex);
+          parts.push(<span key={`pre-${startIndex}`}>{processText(beforeText)}</span>);
+        }
+        
+        // Find the end of the code block
+        const endIndex = remainingText.indexOf('```', startIndex + 3);
+        if (endIndex === -1) break; // Unclosed code block
+        
+        // Extract the code and potential language
+        const codeWithLang = remainingText.substring(startIndex + 3, endIndex);
+        const firstLineEnd = codeWithLang.indexOf('\n');
+        let language = '';
+        let code = codeWithLang;
+        
+        if (firstLineEnd > 0) {
+          language = codeWithLang.substring(0, firstLineEnd).trim();
+          code = codeWithLang.substring(firstLineEnd + 1);
+        }
+        
+        // Add the code block element
         parts.push(
-          <span key={`text-${lastIndex}`}>
-            {text.substring(lastIndex, match.index)}
-          </span>
+          <div key={`code-${startIndex}`} style={{
+            background: '#2d2d2d',
+            color: '#f8f8f2',
+            padding: '12px',
+            borderRadius: '5px',
+            margin: '8px 0',
+            overflowX: 'auto',
+            textAlign: 'left'
+          }}>
+            {language && (
+              <div style={{ color: '#a6a6a6', fontSize: '0.8rem', marginBottom: '4px' }}>
+                {language}
+              </div>
+            )}
+            <pre style={{ margin: 0 }}><code>{code}</code></pre>
+          </div>
         );
+        
+        // Continue with remaining text
+        remainingText = remainingText.substring(endIndex + 3);
+        startIndex = remainingText.indexOf('```');
       }
       
-      // Add the code block
-      const language = match[1] || 'plaintext';
-      const code = match[2];
+      // Add any remaining text
+      if (remainingText) {
+        parts.push(<span key={`post-code`}>{processText(remainingText)}</span>);
+      }
       
-      parts.push(
-        <div key={`code-${match.index}`} style={{
-          background: '#2d2d2d',
-          color: '#f8f8f2',
-          padding: '12px',
-          borderRadius: '5px',
-          margin: '8px 0',
-          overflowX: 'auto',
-          textAlign: 'left'
-        }}>
-          {language && (
-            <div style={{ color: '#a6a6a6', fontSize: '0.8rem', marginBottom: '4px' }}>
-              {language}
-            </div>
-          )}
-          <pre style={{ margin: 0 }}><code>{code}</code></pre>
-        </div>
-      );
-      
-      lastIndex = match.index + match[0].length;
+      return <div>{parts}</div>;
     }
     
-    // Add any remaining text
-    if (lastIndex < text.length) {
-      parts.push(
-        <span key={`text-${lastIndex}`}>
-          {text.substring(lastIndex)}
-        </span>
-      );
-    }
-    
-    return parts;
+    return processText(text);
   };
-
-  // Function to render lists
-  const renderLists = (text) => {
-    const parts = [];
+  
+  const processText = (text) => {
+    if (!text) return null;
+  
     const lines = text.split('\n');
-    let inList = false;
-    let listType = null;
-    let listItems = [];
-    let textBuffer = [];
-    
-    lines.forEach((line, index) => {
-      // Check if this line is a list item
-      const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)$/);
-      const numberMatch = line.match(/^(\s*)\d+\.\s+(.+)$/);
-      
-      if (bulletMatch || numberMatch) {
-        // If we have buffered text, add it before starting the list
-        if (textBuffer.length > 0) {
-          parts.push(
-            <span key={`text-${index}`}>
-              {textBuffer.join('\n')}
-            </span>
-          );
-          textBuffer = [];
-        }
-        
-        // Determine list type
-        const newListType = bulletMatch ? 'bullet' : 'number';
-        
-        // If we're not in a list or switching list types, start a new one
-        if (!inList || listType !== newListType) {
-          // If we were in a list, close it
-          if (inList) {
-            const ListTag = listType === 'bullet' ? 'ul' : 'ol';
-            parts.push(
-              <ListTag key={`list-${index}`} style={{ 
-                textAlign: 'left',
-                paddingLeft: '20px',
-                margin: '8px 0'
-              }}>
-                {listItems.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ListTag>
+  
+    return (
+      <div style={{ textAlign: 'left' }}>
+        {lines.map((line, i) => {
+          // Bullet list
+          const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)$/);
+          if (bulletMatch) {
+            return (
+              <div key={i} style={{ paddingLeft: '20px', marginBottom: '4px' }}>
+                <span style={{ marginRight: '5px' }}>•</span>
+                {processUrls(bulletMatch[2])}
+              </div>
             );
-            listItems = [];
           }
-          
-          inList = true;
-          listType = newListType;
-        }
-        
-        // Add the item to our current list
-        const itemText = (bulletMatch ? bulletMatch[2] : numberMatch[2]);
-        listItems.push(itemText);
-      } else {
-        // Not a list item
-        
-        // If we were in a list, close it
-        if (inList) {
-          const ListTag = listType === 'bullet' ? 'ul' : 'ol';
-          parts.push(
-            <ListTag key={`list-${index}`} style={{ 
-              textAlign: 'left',
-              paddingLeft: '20px',
-              margin: '8px 0'
-            }}>
-              {listItems.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ListTag>
+  
+          // Numbered list
+          const numberMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
+          if (numberMatch) {
+            const listNumber = numberMatch[2]; // Safe access
+            return (
+              <div key={i} style={{ paddingLeft: '20px', marginBottom: '4px' }}>
+                <span style={{ marginRight: '5px', fontWeight: 'bold' }}>{listNumber}.</span>
+                {processUrls(numberMatch[3])}
+              </div>
+            );
+          }
+  
+          // Plain line
+          return line ? (
+            <div key={i} style={{ marginBottom: '4px' }}>
+              {processUrls(line)}
+            </div>
+          ) : (
+            <br key={i} />
           );
-          listItems = [];
-          inList = false;
-        }
-        
-        // Buffer this line
-        textBuffer.push(line);
-      }
-    });
-    
-    // If we were in a list at the end, close it
-    if (inList) {
-      const ListTag = listType === 'bullet' ? 'ul' : 'ol';
-      parts.push(
-        <ListTag key="list-end" style={{ 
-          textAlign: 'left',
-          paddingLeft: '20px',
-          margin: '8px 0'
-        }}>
-          {listItems.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ListTag>
-      );
-    }
-    
-    // Add any remaining buffered text
-    if (textBuffer.length > 0) {
-      parts.push(
-        <span key="text-end">
-          {textBuffer.join('\n')}
-        </span>
-      );
-    }
-    
-    return parts;
+        })}
+      </div>
+    );
   };
-
-  // Function to render URLs and images
-  const renderUrlsAndImages = (text) => {
-    const elements = [];
-    const urlRegex = /https?:\/\/[^\s]+/g;
+  
+  
+  // Process URLs within text
+  const processUrls = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = [];
     let match;
     let lastIndex = 0;
-
+    let tempText = text;
+    
+    // Reset lastIndex of regex
+    urlRegex.lastIndex = 0;
+    
     while ((match = urlRegex.exec(text)) !== null) {
       const url = match[0];
       const startIndex = match.index;
-
-      // Add any text before the URL
+      
+      // Add text before URL
       if (startIndex > lastIndex) {
-        elements.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex, startIndex)}</span>);
+        parts.push(text.substring(lastIndex, startIndex));
       }
-
-      // Render the URL as an image or link
+      
+      // Add URL as link or image
       if (isImageUrl(url)) {
-        elements.push(
+        parts.push(
           <img 
-            key={`img-${startIndex}`} 
+            key={startIndex} 
             src={url} 
             alt="image" 
-            style={{ 
-              maxWidth: '200px', 
-              maxHeight: '200px', 
-              margin: '8px 0',
-              borderRadius: '5px' 
-            }} 
+            style={{ maxWidth: '200px', maxHeight: '150px', margin: '5px 0' }} 
           />
         );
       } else {
-        elements.push(
+        parts.push(
           <a 
-            key={`link-${startIndex}`} 
+            key={startIndex} 
             href={url} 
             target="_blank" 
-            rel="noopener noreferrer"
+            rel="noopener noreferrer" 
             style={{ color: '#3b82f6', textDecoration: 'underline' }}
           >
             {url}
           </a>
         );
       }
-
-      lastIndex = urlRegex.lastIndex;
+      
+      lastIndex = startIndex + url.length;
     }
-
-    // Add any remaining text after the last URL
+    
+    // Add remaining text
     if (lastIndex < text.length) {
-      elements.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex)}</span>);
-    }
-
-    return elements;
-  };
-
-  // Master function that processes the message text
-  const renderMessageContent = (text) => {
-    if (!text) return null;
-    
-    // We need to handle different cases in order:
-    
-    // 1. If there are code blocks, handle them first
-    if (isCodeBlock(text)) {
-      return renderCodeBlock(text);
+      parts.push(text.substring(lastIndex));
     }
     
-    // 2. If there are lists, handle them
-    if (containsList(text)) {
-      return renderLists(text);
+    // If we found any URLs, return the processed parts
+    if (parts.length > 0) {
+      return parts.map((part, i) => 
+        typeof part === 'string' ? <span key={i}>{part}</span> : part
+      );
     }
     
-    // 3. Handle URLs and images
-    const urlsPresent = text.match(/https?:\/\/[^\s]+/g);
-    if (urlsPresent) {
-      return renderUrlsAndImages(text);
-    }
-    
-    // 4. Default - just return the text
+    // Otherwise return original text
     return text;
   };
-
+  
   return (
     <div style={{ 
       width: '100%', 
@@ -322,6 +245,7 @@ function ChatInterface() {
                   margin: '5px 0',
                   wordBreak: 'break-word',
                   boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+                  textAlign: 'left'
                 }}
               >
                 <strong>{msg.sender === 'user' ? 'You' : 'Bot'}:</strong>{' '}
@@ -335,45 +259,6 @@ function ChatInterface() {
       <div style={{ position: 'relative', width: '100%' }}>
         <QuestionBox addMessage={addMessage} />
       </div>
-
-      {/* Test button for debugging */}
-      <button 
-        onClick={() => {
-          const testMessage = `This is a test message with different formats.
-
-Here's a link: https://example.com
-
-Here's a code example:
-\`\`\`javascript
-function sum(a, b) {
-  return a + b;
-}
-\`\`\`
-
-Here's a bullet list:
-- Item 1
-- Item 2
-- Item 3
-
-Here's a numbered list:
-1. First step
-2. Second step
-3. Third step`;
-          
-          addMessage(testMessage, 'bot');
-        }}
-        style={{
-          padding: '8px 16px',
-          background: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          marginBottom: '10px',
-          cursor: 'pointer'
-        }}
-      >
-        Test Message Rendering
-      </button>
     </div>
   );
 }
