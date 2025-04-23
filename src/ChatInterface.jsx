@@ -30,72 +30,59 @@ function ChatInterface() {
     }
   }, [messages]);
 
-  // Function to parse and render the message content
   const renderMessageContent = (text) => {
     if (!text) return null;
-    
-    // First handle code blocks
-    if (text.includes('```')) {
-      const parts = [];
-      let remainingText = text;
-      let startIndex = remainingText.indexOf('```');
-      
-      while (startIndex !== -1) {
-        // Add text before the code block
-        if (startIndex > 0) {
-          const beforeText = remainingText.substring(0, startIndex);
-          parts.push(<span key={`pre-${startIndex}`}>{processText(beforeText)}</span>);
-        }
-        
-        // Find the end of the code block
-        const endIndex = remainingText.indexOf('```', startIndex + 3);
-        if (endIndex === -1) break; // Unclosed code block
-        
-        // Extract the code and potential language
-        const codeWithLang = remainingText.substring(startIndex + 3, endIndex);
-        const firstLineEnd = codeWithLang.indexOf('\n');
-        let language = '';
-        let code = codeWithLang;
-        
-        if (firstLineEnd > 0) {
-          language = codeWithLang.substring(0, firstLineEnd).trim();
-          code = codeWithLang.substring(firstLineEnd + 1);
-        }
-        
-        // Add the code block element
-        parts.push(
-          <div key={`code-${startIndex}`} style={{
-            background: '#2d2d2d',
-            color: '#f8f8f2',
-            padding: '12px',
-            borderRadius: '5px',
-            margin: '8px 0',
-            overflowX: 'auto',
-            textAlign: 'left'
-          }}>
-            {language && (
-              <div style={{ color: '#a6a6a6', fontSize: '0.8rem', marginBottom: '4px' }}>
-                {language}
-              </div>
-            )}
-            <pre style={{ margin: 0 }}><code>{code}</code></pre>
-          </div>
-        );
-        
-        // Continue with remaining text
-        remainingText = remainingText.substring(endIndex + 3);
-        startIndex = remainingText.indexOf('```');
+  
+    const parts = [];
+    let remainingText = text;
+    let startIndex = remainingText.indexOf('```');
+  
+    while (startIndex !== -1) {
+      if (startIndex > 0) {
+        const beforeText = remainingText.substring(0, startIndex);
+        parts.push(<span key={`pre-${startIndex}`}>{processText(beforeText)}</span>);
       }
-      
-      // Add any remaining text
-      if (remainingText) {
-        parts.push(<span key={`post-code`}>{processText(remainingText)}</span>);
+  
+      const endIndex = remainingText.indexOf('```', startIndex + 3);
+      if (endIndex === -1) {
+        // Unclosed code block, treat the rest as normal text
+        parts.push(<span key="unclosed">{processText(remainingText)}</span>);
+        return <div>{parts}</div>;
       }
-      
-      return <div>{parts}</div>;
+  
+      const codeBlock = remainingText.substring(startIndex + 3, endIndex);
+      const firstLineBreak = codeBlock.indexOf('\n');
+      const language = firstLineBreak !== -1 ? codeBlock.substring(0, firstLineBreak).trim() : '';
+      const code = firstLineBreak !== -1 ? codeBlock.substring(firstLineBreak + 1) : codeBlock;
+  
+      parts.push(
+        <div key={`code-${startIndex}`} style={{
+          background: '#2d2d2d',
+          color: '#f8f8f2',
+          padding: '12px',
+          borderRadius: '5px',
+          margin: '8px 0',
+          overflowX: 'auto',
+          textAlign: 'left',
+        }}>
+          {language && (
+            <div style={{ color: '#a6a6a6', fontSize: '0.8rem', marginBottom: '4px' }}>
+              {language}
+            </div>
+          )}
+          <pre style={{ margin: 0 }}><code>{code}</code></pre>
+        </div>
+      );
+  
+      remainingText = remainingText.substring(endIndex + 3);
+      startIndex = remainingText.indexOf('```');
     }
-    
-    return processText(text);
+  
+    if (remainingText) {
+      parts.push(<span key="post">{processText(remainingText)}</span>);
+    }
+  
+    return <div>{parts}</div>;
   };
   
   const processText = (text) => {
@@ -106,7 +93,6 @@ function ChatInterface() {
     return (
       <div style={{ textAlign: 'left' }}>
         {lines.map((line, i) => {
-          // Bullet list
           const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)$/);
           if (bulletMatch) {
             return (
@@ -117,10 +103,9 @@ function ChatInterface() {
             );
           }
   
-          // Numbered list
           const numberMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
           if (numberMatch) {
-            const listNumber = numberMatch[2]; // Safe access
+            const listNumber = numberMatch[2];
             return (
               <div key={i} style={{ paddingLeft: '20px', marginBottom: '4px' }}>
                 <span style={{ marginRight: '5px', fontWeight: 'bold' }}>{listNumber}.</span>
@@ -129,7 +114,6 @@ function ChatInterface() {
             );
           }
   
-          // Plain line
           return line ? (
             <div key={i} style={{ marginBottom: '4px' }}>
               {processUrls(line)}
@@ -141,7 +125,6 @@ function ChatInterface() {
       </div>
     );
   };
-  
   
   // Process URLs within text
   const processUrls = (text) => {
