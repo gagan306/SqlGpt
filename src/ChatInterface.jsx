@@ -33,8 +33,8 @@ function ChatInterface() {
   const renderCodeBlock = (text) => {
     const parts = [];
     let lastIndex = 0;
-    // Updated regex to handle both formatted and unformatted code blocks
-    const codeBlockRegex = /(?:```)?(\w+)\n([\s\S]*?)(?:```|(?=\n\w+\n)|$)/g;
+    // Only match proper code blocks with backticks
+    const codeBlockRegex = /```([\w]*)\n([\s\S]*?)(?:```|$)/g;
     let match;
 
     while ((match = codeBlockRegex.exec(text)) !== null) {
@@ -50,70 +50,90 @@ function ChatInterface() {
       const language = match[1] || 'plaintext';
       const code = match[2].trim();
 
-      // Only render as code block if it looks like code
-      if (language && code && (language !== 'plaintext' || code.includes('{') || code.includes('def') || code.includes('function'))) {
-        parts.push(
-          <div key={`code-${match.index}`} className="code-block" style={{
-            background: '#1e1e1e',
-            color: '#d4d4d4',
-            padding: '16px',
-            borderRadius: '8px',
-            margin: '12px 0',
-            overflowX: 'auto',
-            fontFamily: 'Consolas, Monaco, "Andale Mono", monospace',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            position: 'relative',
-            width: '100%'
-          }}>
-            {language !== 'plaintext' && (
-              <div style={{
-                position: 'absolute',
-                top: '8px',
-                right: '12px',
-                color: '#858585',
-                fontSize: '0.85rem',
-                padding: '2px 8px',
-                borderRadius: '4px',
-                background: 'rgba(255, 255, 255, 0.1)'
-              }}>
-                {language}
-              </div>
-            )}
-            <pre style={{ 
-              margin: 0, 
-              whiteSpace: 'pre-wrap',
-              background: 'transparent',
-              color: 'inherit',
-              padding: 0,
-              border: 'none'
+      parts.push(
+        <div key={`code-${match.index}`} className="code-block" style={{
+          background: '#1e1e1e',
+          color: '#d4d4d4',
+          padding: '16px',
+          borderRadius: '8px',
+          margin: '12px 0',
+          overflowX: 'auto',
+          fontFamily: 'Consolas, Monaco, "Andale Mono", monospace',
+          fontSize: '14px',
+          lineHeight: '1.5',
+          position: 'relative',
+          width: '100%'
+        }}>
+          {language !== 'plaintext' && (
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              right: '12px',
+              color: '#858585',
+              fontSize: '0.85rem',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              background: 'rgba(255, 255, 255, 0.1)'
             }}>
-              <code style={{
-                fontFamily: 'inherit',
-                fontSize: 'inherit',
-                background: 'transparent',
-                padding: 0
-              }}>{code}</code>
-            </pre>
-          </div>
-        );
-      } else {
-        // If it doesn't look like code, treat it as regular text
-        parts.push(
-          <span key={`text-${match.index}`}>
-            {processText(match[0])}
-          </span>
-        );
-      }
+              {language}
+            </div>
+          )}
+          <pre style={{ 
+            margin: 0, 
+            whiteSpace: 'pre-wrap',
+            background: 'transparent',
+            color: 'inherit',
+            padding: 0,
+            border: 'none'
+          }}>
+            <code style={{
+              fontFamily: 'inherit',
+              fontSize: 'inherit',
+              background: 'transparent',
+              padding: 0
+            }}>{code}</code>
+          </pre>
+        </div>
+      );
 
       lastIndex = match.index + match[0].length;
     }
 
-    // Add remaining text after last code block
-    if (lastIndex < text.length) {
+    // Handle text that looks like code but isn't in backticks
+    const plainCodeRegex = /^(\w+)\n([\s\S]+?)(?=\n\w+\n|$)/g;
+    text = text.substring(lastIndex);
+    while ((match = plainCodeRegex.exec(text)) !== null) {
+      if (match.index > 0) {
+        parts.push(
+          <span key={`text-${lastIndex + match.index}`}>
+            {processText(text.substring(0, match.index))}
+          </span>
+        );
+      }
+
+      const content = match[0];
+      parts.push(
+        <div key={`plain-${lastIndex + match.index}`} style={{
+          fontFamily: 'Consolas, Monaco, "Andale Mono", monospace',
+          fontSize: '14px',
+          lineHeight: '1.5',
+          padding: '8px',
+          margin: '8px 0',
+          whiteSpace: 'pre-wrap'
+        }}>
+          {processText(content)}
+        </div>
+      );
+
+      lastIndex += match.index + match[0].length;
+      text = text.substring(match.index + match[0].length);
+    }
+
+    // Add remaining text
+    if (text) {
       parts.push(
         <span key={`text-${lastIndex}`}>
-          {processText(text.substring(lastIndex))}
+          {processText(text)}
         </span>
       );
     }
