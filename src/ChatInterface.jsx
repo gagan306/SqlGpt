@@ -33,7 +33,6 @@ function ChatInterface() {
   const renderCodeBlock = (text) => {
     const parts = [];
     let lastIndex = 0;
-    // Only match proper code blocks with backticks
     const codeBlockRegex = /```([\w]*)\n([\s\S]*?)(?:```|$)/g;
     let match;
 
@@ -41,7 +40,7 @@ function ChatInterface() {
       // Add text before code block
       if (match.index > lastIndex) {
         parts.push(
-          <span key={`text-${lastIndex}`}>
+          <span key={`text-${lastIndex}`} style={{ display: 'inline-block', width: '100%' }}>
             {processText(text.substring(lastIndex, match.index))}
           </span>
         );
@@ -56,7 +55,7 @@ function ChatInterface() {
           color: '#d4d4d4',
           padding: '16px',
           borderRadius: '8px',
-          margin: '12px 0',
+          margin: '8px 0',
           overflowX: 'auto',
           fontFamily: 'Consolas, Monaco, "Andale Mono", monospace',
           fontSize: '14px',
@@ -105,7 +104,7 @@ function ChatInterface() {
     while ((match = plainCodeRegex.exec(text)) !== null) {
       if (match.index > 0) {
         parts.push(
-          <span key={`text-${lastIndex + match.index}`}>
+          <span key={`text-${lastIndex + match.index}`} style={{ display: 'inline-block', width: '100%' }}>
             {processText(text.substring(0, match.index))}
           </span>
         );
@@ -118,7 +117,7 @@ function ChatInterface() {
           fontSize: '14px',
           lineHeight: '1.5',
           padding: '8px',
-          margin: '8px 0',
+          margin: '4px 0',
           whiteSpace: 'pre-wrap'
         }}>
           {processText(content)}
@@ -132,7 +131,7 @@ function ChatInterface() {
     // Add remaining text
     if (text) {
       parts.push(
-        <span key={`text-${lastIndex}`}>
+        <span key={`text-${lastIndex}`} style={{ display: 'inline-block', width: '100%' }}>
           {processText(text)}
         </span>
       );
@@ -144,88 +143,25 @@ function ChatInterface() {
   const processText = (text) => {
     if (!text) return null;
     const lines = text.split('\n');
-    let inList = false;
-    let listType = null;
-    let listItems = [];
-    let listCounter = 1;
-
-    const renderList = () => {
-      if (!listItems.length) return null;
-      const ListComponent = listType === 'ordered' ? 'ol' : 'ul';
-      const list = (
-        <ListComponent key={`list-${listItems.length}`} style={{ 
-          paddingLeft: '2rem',
-          margin: '0.5rem 0',
-          color: '#fff'
-        }}>
-          {listItems.map((item, i) => (
-            <li key={i} style={{ marginBottom: '0.5rem' }}>
-              {processUrls(item)}
-            </li>
-          ))}
-        </ListComponent>
-      );
-      listItems = [];
-      inList = false;
-      listType = null;
-      listCounter = 1;
-      return list;
-    };
-
     const processedLines = [];
-    let previousLineEmpty = true;
     
     lines.forEach((line, i) => {
-      const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)$/);
-      const numberMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
       const trimmedLine = line.trim();
-
-      // Check if this line could be a list item
-      const couldBeListItem = previousLineEmpty && trimmedLine && !trimmedLine.startsWith('Here') && !trimmedLine.startsWith('And');
-
-      if (bulletMatch) {
-        if (!inList || listType !== 'unordered') {
-          if (inList) processedLines.push(renderList());
-          inList = true;
-          listType = 'unordered';
-        }
-        listItems.push(bulletMatch[2]);
-      } else if (numberMatch) {
-        if (!inList || listType !== 'ordered') {
-          if (inList) processedLines.push(renderList());
-          inList = true;
-          listType = 'ordered';
-        }
-        listItems.push(numberMatch[3]);
-      } else if (couldBeListItem && !inList) {
-        // Start a new list if line looks like it could be a list item
-        inList = true;
-        listType = previousLineEmpty ? 'ordered' : 'unordered';
-        listItems.push(trimmedLine);
-      } else if (couldBeListItem && inList) {
-        // Continue existing list
-        listItems.push(trimmedLine);
-      } else {
-        if (inList) {
-          processedLines.push(renderList());
-        }
-        if (trimmedLine) {
-          processedLines.push(
-            <p key={i} style={{ margin: '0.75rem 0', color: '#fff' }}>
-              {processUrls(trimmedLine)}
-            </p>
-          );
-        } else {
-          processedLines.push(<br key={i} />);
-        }
+      
+      if (trimmedLine) {
+        processedLines.push(
+          <p key={i} style={{ 
+            margin: '0.25rem 0',
+            color: '#fff',
+            lineHeight: '1.5'
+          }}>
+            {processUrls(trimmedLine)}
+          </p>
+        );
+      } else if (i > 0 && i < lines.length - 1) {
+        processedLines.push(<br key={i} />);
       }
-
-      previousLineEmpty = !trimmedLine;
     });
-
-    if (inList) {
-      processedLines.push(renderList());
-    }
 
     return <>{processedLines}</>;
   };
